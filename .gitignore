@@ -40,4 +40,6 @@ $RECYCLE.BIN/
 .AppleDesktop
 Network Trash Folder
 Temporary Items
-.apdisk
+.*
+.settings/*
+target/*
