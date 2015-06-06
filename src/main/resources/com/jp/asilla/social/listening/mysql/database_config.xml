@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+	PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+	<properties resource="database.properties" />
+	<settings>
+		<setting name="cacheEnabled" value="false" />
+		<setting name="lazyLoadingEnabled" value="false" />
+		<setting name="multipleResultSetsEnabled" value="true" />
+		<setting name="useColumnLabel" value="true" />
+		<setting name="useGeneratedKeys" value="false" />
+		<setting name="autoMappingBehavior" value="NONE" />
+		<setting name="defaultExecutorType" value="REUSE" />
+		<setting name="defaultStatementTimeout" value="1000" />
+		<setting name="safeRowBoundsEnabled" value="false" />
+		<setting name="mapUnderscoreToCamelCase" value="false" />
+		<setting name="localCacheScope" value="SESSION" />
+		<setting name="jdbcTypeForNull" value="OTHER" />
+		<setting name="lazyLoadTriggerMethods" value="equals,clone,hashCode,toString" />
+		<setting name="logImpl" value="LOG4J" />
+	</settings>
+
+	<!-- <typeHandlers>
+		<typeHandler handler="com.jp.asilla.social.listening.dao.handler.GeometryTypeHandler"/>
+	</typeHandlers> -->
+	
+	<environments default="production">
+		<environment id="local">
+			<transactionManager type="JDBC" />
+			<dataSource type="POOLED">
+				<property name="driver" value="${database.local.social.listening.driver}" />
+				<property name="url" value="${database.local.social.listening.url}" />
+				<property name="username" value="${database.local.social.listening.username}" />
+				<property name="password" value="${database.local.social.listening.password}" />
+				<property name="poolPingQuery" value="SELECT NOW()" />
+              	<property name="poolPingEnabled" value="true" />
+              	<!-- <property name="poolPingConnectionsNotUsedFor" value="599" /> -->
+			</dataSource>
+		</environment>
+		<environment id="production">
+			<transactionManager type="JDBC" />
+			<dataSource type="POOLED">
+				<property name="driver" value="${database.social.listening.driver}" />
+				<property name="url" value="${database.social.listening.url}" />
+				<property name="username" value="${database.social.listening.username}" />
+				<property name="password" value="${database.social.listening.password}" />
+				<property name="poolPingQuery" value="SELECT NOW()" />
+              	<property name="poolPingEnabled" value="true" />
+              	<!-- <property name="poolPingConnectionsNotUsedFor" value="599" /> -->
+			</dataSource>
+		</environment>
+	</environments>
+
+	<mappers>
+		<mapper resource="com/jp/asilla/social/listening/mysql/mapper_job.xml" />
+		<mapper resource="com/jp/asilla/social/listening/mysql/mapper_status.xml" />
+		<mapper resource="com/jp/asilla/social/listening/mysql/mapper_places.xml" />
+	</mappers>
+
+</configuration>

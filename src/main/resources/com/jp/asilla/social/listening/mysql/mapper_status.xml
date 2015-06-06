@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="status">
+	<resultMap id="mapper_status" type="com.jp.asilla.social.listening.dao.entities.SLStatus">
+		<result property="network" column="network"/>
+		<result property="statusId" column="id"/>
+		<result property="text" column="text"/>
+		<result property="source" column="source"/>
+		<result property="isTruncated" column="isTruncated"/>
+		<result property="inReplyToStatusId" column="inReplyToStatusId"/>
+		<result property="inReplyToUserId" column="inReplyToUserId"/>
+		<result property="isFavorited" column="isFavorited"/>
+		<result property="favoriteCount" column="favoriteCount"/>
+		<!-- <result property="location" column="location" 
+			typeHandler="com.jp.asilla.social.listening.dao.handler.GeometryTypeHandler"
+			javaType="twitter4j.GeoLocation"
+			/> -->
+		<result property="latitude" column="latitude"/>
+		<result property="longitude" column="longitude"/>
+		
+		<result property="isPossiblySensitive" column="isPossiblySensitive"/>
+		<result property="language" column="language"/>
+		<result property="userId" column="userId"/>
+		<result property="placeId" column="placeId"/>
+		<result property="createdDate" column="createdDate"/>
+		
+	</resultMap>
+	
+	<select id="select" resultMap="mapper_status">
+		SELECT 
+			`network`,
+			`id`,
+			`text`,
+			`source`,
+			`isTruncated`,
+			`inReplyToStatusId`,
+			`inReplyToUserId`,
+			`isFavorited`,
+			`favoriteCount`,
+			`location`,
+			ST_X(`location`) AS latitude,
+			ST_Y(`location`) AS longitude,
+			`isPossiblySensitive`,
+			`language`,
+			`userId`,
+			`placeId`,
+			`createdDate`
+		FROM social_status 
+		LIMIT #{limit} OFFSET #{offset}
+	</select>
+	
+	<select id="selectByID" resultMap="mapper_status">
+		SELECT 
+			`network`,
+			`id`,
+			`text`,
+			`source`,
+			`isTruncated`,
+			`inReplyToStatusId`,
+			`inReplyToUserId`,
+			`isFavorited`,
+			`favoriteCount`,
+			`location`,
+			ST_X(`location`) AS latitude,
+			ST_Y(`location`) AS longitude,
+			`isPossiblySensitive`,
+			`language`,
+			`userId`,
+			`placeId,
+			`createdDate`
+		FROM social_status 
+		WHERE `network` = #{network} AND `id` = #{statusId}
+	</select>
+	
+	<insert id="insert">
+		<bind name="point" value="_parameter.getLatitude() + ' ' + _parameter.getLongitude()" />
+	    INSERT INTO social_status(
+	    	`network`,
+	    	`id`,
+			`text`,
+			`source`,
+			`isTruncated`,
+			`inReplyToStatusId`,
+			`inReplyToUserId`,
+			`isFavorited`,
+			`favoriteCount`,
+			`location`,
+			`isPossiblySensitive`,
+			`language`,
+			`userId`,
+			`placeId`,
+			`createdDate`
+	    ) VALUES (
+	    	#{network},
+	    	#{statusId},
+			#{text},
+			#{source},
+			#{isTruncated},
+			#{inReplyToStatusId},
+			#{inReplyToUserId},
+			#{isFavorited},
+			#{favoriteCount},
+			<choose>
+				<when test="latitude != null and longitude != null">GeomFromText('POINT(${point})'),</when>
+				<otherwise>null,</otherwise>
+			</choose>
+			#{isPossiblySensitive},
+			#{language},
+			#{userId},
+			#{placeId},
+			#{createdDate}
+	    );
+	</insert>
+	
+	<insert id="insertOrUpdate">
+		<if test="latitude != null and longitude != null">
+			<bind name="point" value="_parameter.getLatitude() + ' ' + _parameter.getLongitude()" />
+		</if>
+		INSERT INTO social_status(
+	    	`network`,
+	    	`id`,
+			`text`,
+			`source`,
+			`isTruncated`,
+			`inReplyToStatusId`,
+			`inReplyToUserId`,
+			`isFavorited`,
+			`favoriteCount`,
+			`location`,
+			`isPossiblySensitive`,
+			`language`,
+			`userId`,
+			`placeId`,
+			`createdDate`
+	    ) VALUES (
+	    	#{network},
+	    	#{statusId},
+			#{text},
+			#{source},
+			#{isTruncated},
+			#{inReplyToStatusId},
+			#{inReplyToUserId},
+			#{isFavorited},
+			#{favoriteCount},
+			<choose>
+				<when test="latitude != null and longitude != null">
+					GeomFromText('POINT(${point})'),
+				</when>
+				<otherwise>null,</otherwise>
+			</choose>
+			#{isPossiblySensitive},
+			#{language},
+			#{userId},
+			#{placeId},
+			#{createdDate}
+		) ON DUPLICATE KEY UPDATE
+			`text` = VALUES(`text`),
+			`source` = VALUES(`source`),
+			`isTruncated` = VALUES(`isTruncated`),
+			`inReplyToStatusId` = VALUES(`inReplyToStatusId`),
+			`inReplyToUserId` = VALUES(`inReplyToUserId`),
+			`isFavorited` = VALUES(`isFavorited`),
+			`favoriteCount` = VALUES(`favoriteCount`),
+			`location` = VALUES(`location`),
+			`isPossiblySensitive` = VALUES(`isPossiblySensitive`),
+			`language` = VALUES(`language`),
+			`userId` = VALUES(`userId`),
+			`placeId` = VALUES(`placeId`),
+			`createdDate` = VALUES(`createdDate`)
+	</insert>
+	
+	<insert id="insertBatch">
+		INSERT INTO social_status(
+			`network`,
+	    	`id`,
+			`text`,
+			`source`,
+			`isTruncated`,
+			`inReplyToStatusId`,
+			`inReplyToUserId`,
+			`isFavorited`,
+			`favoriteCount`,
+			`location`,
+			`isPossiblySensitive`,
+			`language`,
+			`userId`,
+			`placeId`,
+			`createdDate`
+	    ) VALUES 
+	    <foreach item="item" collection="models" separator=",">
+	    
+	    <if test="item.latitude != null and item.longitude != null">
+	    	<bind name="point" value="item.getLatitude() + ' ' + item.getLongitude()" />
+	    </if>
+	    (
+	    	#{item.network},
+	    	#{item.statusId},
+			#{item.text},
+			#{item.source},
+			#{item.isTruncated},
+			#{item.inReplyToStatusId},
+			#{item.inReplyToUserId},
+			#{item.isFavorited},
+			#{item.favoriteCount},
+			<choose>
+				<when test="item.latitude != null and item.longitude != null">GeomFromText('POINT(${point})'),</when>
+				<otherwise>null,</otherwise>
+			</choose>
+			#{item.isPossiblySensitive},
+			#{item.language},
+			#{item.userId},
+			#{item.placeId},
+			#{item.createdDate}
+	    )
+	    </foreach>
+	    ON DUPLICATE KEY UPDATE
+	    	`text` = VALUES(`text`),
+			`source` = VALUES(`source`),
+			`isTruncated` = VALUES(`isTruncated`),
+			`inReplyToStatusId` = VALUES(`inReplyToStatusId`),
+			`inReplyToUserId` = VALUES(`inReplyToUserId`),
+			`isFavorited` = VALUES(`isFavorited`),
+			`favoriteCount` = VALUES(`favoriteCount`),
+			`location` = VALUES(`location`),
+			`isPossiblySensitive` = VALUES(`isPossiblySensitive`),
+			`language` = VALUES(`language`),
+			`userId` = VALUES(`userId`),
+			`placeId` = VALUES(`placeId`),
+			`createdDate` = VALUES(`createdDate`)
+	</insert>
+	
+	<update id="update">
+		<bind name="point" value="_parameter.getLatitude() + ' ' + _parameter.getLongitude()" />
+	    UPDATE social_status
+		SET 
+			`text` = #{text},
+			`source` = #{source},
+			`isTruncated` = #{isTruncated},
+			`inReplyToStatusId` = #{inReplyToStatusId},
+			`inReplyToUserId` = #{inReplyToUserId},
+			`isFavorited` = #{isFavorited},
+			`favoriteCount` = #{favoriteCount},
+			<choose>
+				<when test="latitude != null and longitude != null">`location` = GeomFromText('POINT(${point})'),</when>
+				<otherwise>`location` = null,</otherwise>
+			</choose>
+			`isPossiblySensitive` = #{isPossiblySensitive},
+			`language` = #{language},
+			`userId` = #{userId},
+			`placeId` = #{placeId},
+			`createdDate` = #{createdDate}
+		WHERE 
+			`network` = #{network} AND `id` = #{statusId}
+	</update>
+	
+	<delete id="delete">
+	    DELETE FROM social_status 
+	    WHERE `network` = #{network} AND id = #{statusId};
+	</delete>
+</mapper>

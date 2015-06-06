@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="places">
+	<resultMap id="mapper_places" type="com.jp.asilla.social.listening.dao.entities.SLPlace">
+		<result property="network" column="network"/>
+		<result property="placeId" column="id"/>
+		<result property="fullName" column="fullName"/>
+		<result property="countryCode" column="countryCode"/>
+		<result property="country" column="country"/>
+		<result property="streetAddress" column="streetAddress"/>
+		<result property="placeType" column="placeType"/>
+		<result property="boundaryText" column="boundaryText"/>
+		<result property="URL" column="url"/>
+	</resultMap>
+	
+	<select id="select" resultMap="mapper_places">
+		SELECT
+			`network`,
+			`id`,
+			`name`,
+			`fullName`,
+			`countryCode`,
+			`country`,
+			`streetAddress`,
+			`placeType`,
+			`boundary`,
+			ST_AsText(`boundary`) as 'boundaryText',
+			`url`
+		FROM social_place
+		LIMIT #{limit} OFFSET #{offset}
+	</select>
+	
+	<select id="selectByID" resultMap="mapper_places">
+		SELECT
+			`network`,
+			`id`,
+			`name`,
+			`fullName`,
+			`countryCode`,
+			`country`,
+			`streetAddress`,
+			`placeType`,
+			`boundary`,
+			ST_AsText(`boundary`) as 'boundaryText',
+			`url`
+		FROM social_place
+		WHERE `network = #{network} AND `id = #{placeId}
+	</select>
+	
+	<insert id="insert">
+		
+	    INSERT INTO social_place(
+	    	`network`,
+			`id`,
+			`name`,
+			`fullName`,
+			`countryCode`,
+			`country`,
+			`streetAddress`,
+			`placeType`,
+			`boundary`,
+			`url`
+	    ) VALUES (
+	    	#{network},
+	    	#{placeId},
+			#{name},
+			#{fullName},
+			#{countryCode},
+			#{country},
+			#{streetAddress},
+			#{placeType},
+			<choose>
+				<when test="boundaryText != null">GeomFromText('${boundaryText}'),</when>
+				<otherwise>null,</otherwise>
+			</choose>
+			#{URL}
+	    );
+	</insert>
+	
+	<insert id="insertOrUpdate">
+		INSERT INTO social_place(
+	    	`network`,
+			`id`,
+			`name`,
+			`fullName`,
+			`countryCode`,
+			`country`,
+			`streetAddress`,
+			`placeType`,
+			`boundary`,
+			`url`
+	    ) VALUES (
+	    	#{network},
+	    	#{placeId},
+			#{name},
+			#{fullName},
+			#{countryCode},
+			#{country},
+			#{streetAddress},
+			#{placeType},
+			<choose>
+				<when test="item.boundaryText != null">GeomFromText('${boundaryText}'),</when>
+				<otherwise>null,</otherwise>
+			</choose>
+			#{URL}
+	    ) ON DUPLICATE KEY UPDATE
+	    	`name` = VALUES(`name`),
+			`fullName` = VALUES(`fullName`),
+			`countryCode` = VALUES(`countryCode`),
+			`country` = VALUES(`country`),
+			`streetAddress` = VALUES(`streetAddress`),
+			`placeType` = VALUES(`placeType`),
+			`boundary` = VALUES(`boundary`),
+			`url` = VALUES(`url`);
+	</insert>
+	
+	<insert id="insertBatch">
+		INSERT INTO social_place(
+	    	`network`,
+			`id`,
+			`name`,
+			`fullName`,
+			`countryCode`,
+			`country`,
+			`streetAddress`,
+			`placeType`,
+			`boundary`,
+			`url`
+	    ) VALUES 
+	    <foreach item="item" collection="models" separator=",">
+	    (
+	    	#{item.network},
+	    	#{item.placeId},
+			#{item.name},
+			#{item.fullName},
+			#{item.countryCode},
+			#{item.country},
+			#{item.streetAddress},
+			#{item.placeType},
+			<choose>
+				<when test="item.boundaryText != null">GeomFromText('${item.boundaryText}'),</when>
+				<otherwise>null,</otherwise>
+			</choose>
+			#{item.URL}
+	    )
+	    </foreach>
+	    ON DUPLICATE KEY UPDATE
+			`name` = VALUES(`name`),
+			`fullName` = VALUES(`fullName`),
+			`countryCode` = VALUES(`countryCode`),
+			`country` = VALUES(`country`),
+			`streetAddress` = VALUES(`streetAddress`),
+			`placeType` = VALUES(`placeType`),
+			`boundary` = VALUES(`boundary`),
+			`url` = VALUES(`url`);
+	</insert>
+	
+	<update id="update">
+	    UPDATE social_place
+		SET 
+			`name` = #{name},
+			`fullName` = #{fullName},
+			`countryCode` = #{countryCode},
+			`country` = #{country},
+			`streetAddress` = #{streetAddress},
+			`placeType` = #{placeType},
+			<choose>
+				<when test="item.boundaryText != null">GeomFromText('${boundaryText}'),</when>
+				<otherwise>null,</otherwise>
+			</choose>
+			`url` = #{URL}
+		WHERE 
+			`network = #{network} AND `id = #{placeId}
+	</update>
+	
+	<delete id="delete">
+	    DELETE FROM social_place WHERE `network = #{network} AND `id = #{placeId}
+	</delete>
+</mapper>

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="job">
+	<resultMap id="mapper_job" type="com.jp.asilla.social.listening.dao.entities.SLJob">
+		<result property="id" column="id"/>
+		<result property="name" column="name"/>
+		<result property="network" column="network"/>
+		<result property="expression" column="expression"/>
+		<result property="timezone" column="timezone"/>
+		<result property="latitude" column="latitude"/>
+		<result property="longitude" column="longitude"/>
+		<result property="radius" column="radius"/>
+		<result property="state" column="state"/>
+	</resultMap>
+	
+	<select id="select" resultMap="mapper_job">
+		SELECT 
+			`id`,
+			`name`,
+			`network`,
+			`expression`,
+			`timezone`,
+			ST_X(`location`) AS 'latitude',
+			ST_Y(`location`) AS 'longitude',
+			`radius`,
+			`state`
+		FROM social_job
+		<if test="limit != null and offset != null">
+			LIMIT #{limit} 
+			OFFSET #{offset}
+		</if>
+	</select>
+	
+	<select id="selectByID" resultMap="mapper_job">
+		SELECT 
+			`id`,
+			`name`,
+			`network`,
+			`expression`,
+			`timezone`,
+			ST_X(`location`) AS 'latitude',
+			ST_Y(`location`) AS 'longitude',
+			`radius`,
+			`state`
+		FROM social_job 
+		WHERE `id` = #{jobId}
+	</select>
+	
+	<insert id="insert">
+		<bind name="point" value="_parameter.getLatitude() + ' ' + _parameter.getLongitude()" />
+	    INSERT INTO social_job(
+	    	`id`,
+			`name`,
+			`network`,
+			`expression`,
+			`timezone`,
+	    	`location`,
+	    	`radius`,
+	    	`state`
+	    ) VALUES (
+	    	#{jobId},
+			#{name},
+			#{network},
+			#{expression},
+			#{timezone},
+	    	GeomFromText('POINT(${point})'),
+	    	#{radius},
+	    	#{state}
+	    );
+	</insert>
+	
+	<insert id="insertOrUpdate">
+		<bind name="point" value="_parameter.getLatitude() + ' ' + _parameter.getLongitude()" />
+		INSERT INTO social_job(
+	    	`id`,
+			`name`,
+			`network`,
+			`expression`,
+			`timezone`,
+	    	`location`,
+	    	`radius`,
+	    	`state`
+	    ) VALUES (
+		    #{jobId},
+		    #{name},
+	    	#{network},
+	    	#{expression},
+			#{timezone},
+	    	GeomFromText('POINT(${point})'),
+	    	#{radius},
+	    	#{state}
+		) ON DUPLICATE KEY UPDATE
+			`name` = VALUES(`name`),
+			`network` = VALUES(`network`),
+			`expression` = VALUES(`expression`),
+			`timezone` = VALUES(`timezone`),
+			`location` = VALUES(`location`),
+			`radius` = VALUES(`radius`),
+			`state` = VALUES(`state`)
+	</insert>
+	
+	<update id="update">
+	    UPDATE social_job
+		SET
+			`name` = #{name},
+			`network` = #{network},
+			`expression` = #{expression},
+			`timezone` = #{timezone},
+			`location` = GeomFromText('POINT(${point})'),
+			`radius` = #{radius},
+	    	`state` = #{state}
+		WHERE 
+			`id` = #{jobId}
+	</update>
+	
+	<update id="updateState">
+	    UPDATE social_job
+		SET
+	    	`state` = #{state}
+		WHERE 
+			`id` = #{jobId}
+	</update>
+	
+	<delete id="delete">
+	    DELETE FROM social_job 
+	    WHERE `id` = #{jobId}
+	</delete>
+</mapper>
